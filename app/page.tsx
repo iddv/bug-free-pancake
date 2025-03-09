@@ -1,12 +1,14 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CheckCircle, MessageCircle, Users, Calendar, ChevronRight, Star, MapPin, Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
+import { WhatsAppIntegration } from "@/components/WhatsAppIntegration"
 
 // ClientOnly component to handle hydration mismatches
 function ClientOnly({ children }: { children: React.ReactNode }) {
@@ -640,6 +642,60 @@ export default function Home() {
               <Button size="lg" variant="secondary" className="text-primary">
                 Message Us on WhatsApp
               </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Add the following section before the footer */}
+        <section className="py-20 bg-gray-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <Badge className="mb-3">New Feature</Badge>
+              <h2 className="text-3xl font-bold mb-4">Connect with WhatsApp</h2>
+              <p className="text-gray-600 max-w-3xl mx-auto">
+                We've integrated with our backend service to allow you to create and join sports events using WhatsApp.
+                Link your account to receive notifications and join event groups directly.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-10 items-center">
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Join Events Seamlessly</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <CheckCircle className="text-green-500 h-5 w-5 mt-1 mr-2" />
+                    <span>Create events on the web and manage them from WhatsApp</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="text-green-500 h-5 w-5 mt-1 mr-2" />
+                    <span>Receive notifications about new events and reminders</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="text-green-500 h-5 w-5 mt-1 mr-2" />
+                    <span>Join WhatsApp groups automatically for each event</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="text-green-500 h-5 w-5 mt-1 mr-2" />
+                    <span>Share events with friends directly through WhatsApp</span>
+                  </li>
+                </ul>
+                
+                <div className="mt-8 space-y-4">
+                  <Link href="/events">
+                    <Button className="w-full sm:w-auto">
+                      Browse Events
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </Link>
+                  <p className="text-sm text-gray-500">
+                    Our backend service makes it easy to organize and join sports activities
+                  </p>
+                </div>
+              </div>
+              
+              <div>
+                <WhatsAppIntegration />
+              </div>
             </div>
           </div>
         </section>
