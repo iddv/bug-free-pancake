@@ -1,6 +1,15 @@
 # Social Sports Landing Page
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+A modern landing page for a social sports application that connects players, organizes events, and builds communities. Built with Next.js, React, and Tailwind CSS.
+
+![Social Sports Screenshot](public/socialsports.jpg)
+
+## Features
+
+- Responsive design that works on all devices
+- Modern UI with Tailwind CSS
+- Optimized performance with Next.js
+- Client-side hydration for improved user experience
 
 ## Getting Started
 
@@ -22,6 +31,14 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a custom font.
 
+## Environment Variables
+
+Copy the `.env.example` file to `.env.local` for local development:
+
+```bash
+cp .env.example .env.local
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -37,7 +54,7 @@ This project is configured for deployment on AWS Amplify. To deploy the applicat
 2. Log in to the [AWS Amplify Console](https://console.aws.amazon.com/amplify/home)
 3. Click "New app" → "Host web app"
 4. Connect your repository and branch
-5. Configure build settings with the following build commands:
+5. Configure build settings with the following build commands or use the included `amplify.yml` file
 
 ```bash
 # Build commands for Next.js on Amplify
@@ -45,7 +62,14 @@ npm ci
 npm run build
 ```
 
-6. Review and save your settings
-7. Deploy the application
+6. Set up environment variables in the Amplify Console (copy from `.env.example`)
+7. Review and save your settings
+8. Deploy the application
+
+### Next.js on AWS Amplify Notes
+
+- AWS Amplify fully supports Next.js applications
+- For SSR (Server-Side Rendering) apps, Amplify automatically configures a serverless infrastructure
+- Static assets are served through Amazon CloudFront CDN
 
 For more information, see the [AWS Amplify documentation for Next.js](https://docs.aws.amazon.com/amplify/latest/userguide/deploy-nextjs-app.html).
