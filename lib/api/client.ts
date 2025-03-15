@@ -2,7 +2,9 @@
 import { Event, EventRequest, JoinEventRequest } from './types';
 
 // Configure the base URL for different environments
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api';
+// Ensure the URL ends with /api but doesn't duplicate it
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 
 // Get auth token from localStorage (client-side only)
 const getAuthToken = () => {
@@ -21,20 +23,20 @@ async function apiRequest<T>(
   data?: Record<string, any>,
   requiresAuth: boolean = true
 ): Promise<T> {
-  const baseUrl = typeof window !== 'undefined' 
-    ? process.env.NEXT_PUBLIC_API_URL || '/api'
-    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-  
-  const url = `${baseUrl}${endpoint}`;
+  // Use the environment variable for the API base URL
+  const url = `${API_BASE_URL}${endpoint}`;
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
   
   if (requiresAuth) {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = getAuthToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+    } else if (requiresAuth) {
+      // If we require auth but don't have a token, throw an error
+      throw new Error('Authentication required. Please login again.');
     }
   }
 
@@ -129,7 +131,7 @@ export const usersApi = {
   
   // Login user
   loginUser: (credentials: { email: string; password: string }) => 
-    apiRequest<any>('/users/login', 'POST', credentials, false),
+    apiRequest<{ token: string; user: any }>('/users/login', 'POST', credentials, false),
   
   // Get current user profile
   getCurrentUser: () => apiRequest<any>('/users/me'),
@@ -168,8 +170,31 @@ export const whatsappApi = {
     apiRequest<{success: boolean}>('/whatsapp/link', 'POST', { userId, phoneNumber }),
 };
 
+/**
+ * Test data API methods
+ */
+export const testDataApi = {
+  // Get summary of test data
+  getTestDataSummary: () => apiRequest<any>('/test-data/summary', 'GET', undefined, false),
+};
+
+/**
+ * Platform statistics API methods
+ */
+export const statsApi = {
+  // Get platform statistics
+  getPlatformStats: () => apiRequest<{
+    activePlayers: number;
+    gamesWeekly: number;
+    padelVenues: number;
+    playerRating: number;
+  }>('/stats', 'GET', undefined, false),
+};
+
 export default {
   events: eventsApi,
   users: usersApi,
   whatsapp: whatsappApi,
+  testData: testDataApi,
+  stats: statsApi,
 }; 
