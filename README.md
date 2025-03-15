@@ -10,6 +10,36 @@ A modern landing page for a social sports application that connects players, org
 - Modern UI with Tailwind CSS
 - Optimized performance with Next.js
 - Client-side hydration for improved user experience
+- Natural language event creation using NLP
+- Backend API integration for event management
+- User participation tracking
+
+## Frontend Components
+
+The application includes the following key components:
+
+### Event Creation
+- **Natural Language Form**: Create events by describing them in plain English
+- **Structured Form**: Detailed form with all event parameters
+- **Tabbed Interface**: Switch between natural language and structured input methods
+
+### Event Management
+- **Event Listings**: View all upcoming sports events
+- **Event Details**: See comprehensive information about specific events
+- **Join Event**: Easily join events with available slots
+
+## Backend API Integration
+
+The frontend integrates with a RESTful backend API that provides the following endpoints:
+
+### Event Management Endpoints
+- `GET /api/events` - List all upcoming events
+- `GET /api/events/{eventId}` - Get event by ID
+- `POST /api/events` - Create new event
+- `POST /api/events/parse` - Parse natural language event descriptions
+- `POST /api/events/{eventId}/join` - Join an event
+- `POST /api/events/{eventId}/cancel` - Cancel an event
+- `GET /api/events/sport-types` - Get available sport types
 
 ## Getting Started
 
@@ -37,6 +67,31 @@ Copy the `.env.example` file to `.env.local` for local development:
 
 ```bash
 cp .env.example .env.local
+```
+
+Key environment variables:
+
+- `NEXT_PUBLIC_API_BASE_URL` - Base URL for the backend API (default: http://localhost:8080/api)
+
+## Project Structure
+
+```
+/app                     # Next.js app directory
+  /events                # Event-related pages
+    /[eventId]           # Event details page
+      /join              # Join event page
+    /create              # Create event page
+  /page.tsx              # Landing page
+/components              # React components
+  /ui                    # Reusable UI components
+  /EventCreationForm.tsx # Structured event creation
+  /JoinEventForm.tsx     # Join event form
+  /NaturalLanguageEventForm.tsx # Natural language input
+/lib                     # Utility functions and hooks
+  /api                   # API integration
+    /client.ts           # API client
+    /hooks.ts            # React hooks for API
+    /types.ts            # TypeScript types
 ```
 
 ## Learn More
