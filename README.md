@@ -2,7 +2,7 @@
 
 A modern landing page for a social sports application that connects players, organizes events, and builds communities. Built with Next.js, React, and Tailwind CSS.
 
-![Social Sports Screenshot](public/socialsports.jpg)
+![Social Sports Community](public/carousel/team-celebration.jpg)
 
 ## Features
 
@@ -19,6 +19,8 @@ A modern landing page for a social sports application that connects players, org
 - User authentication (login/register)
 - WhatsApp integration for event notifications
 - Advanced UI components including calendar and time picker
+
+![Padel Action](public/carousel/padel-action.jpg)
 
 ## Frontend Components
 
@@ -47,6 +49,8 @@ The application includes the following key components:
 ## Backend API Integration
 
 The frontend integrates with a RESTful backend API that provides the following endpoints:
+
+![Amsterdam Venue](public/carousel/amsterdam-venue.jpg)
 
 ### Event Management Endpoints
 - `GET /api/events` - List all upcoming events
