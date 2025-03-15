@@ -1,0 +1,8 @@
+The carousel images will be stored in the public directory:
+
+1. /public/carousel/padel-action.jpg
+2. /public/carousel/social-meetup.jpg  
+3. /public/carousel/team-celebration.jpg
+4. /public/carousel/amsterdam-venue.jpg
+
+These images will replace the placeholder.svg references in the carousel component. 

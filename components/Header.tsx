@@ -60,6 +60,14 @@ export default function Header() {
               >
                 My Events
               </Link>
+              <Link 
+                href="/api-test" 
+                className={`transition-colors hover:text-primary ${
+                  pathname === '/api-test' ? 'text-primary font-medium' : 'text-gray-700'
+                }`}
+              >
+                API Test
+              </Link>
               <Button variant="ghost" onClick={handleLogout} className="text-gray-700 hover:text-primary">
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
@@ -92,11 +100,11 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white shadow-md md:hidden">
-            <nav className="flex flex-col py-3 px-4">
+          <div className="absolute top-full left-0 right-0 bg-white shadow-md md:hidden z-50 mt-1">
+            <nav className="flex flex-col py-3 px-4 max-h-[80vh] overflow-y-auto rounded-b-lg">
               <Link 
                 href="/events" 
-                className={`py-2 ${
+                className={`py-3 px-2 rounded-lg hover:bg-gray-50 ${
                   pathname.includes('/events') ? 'text-primary font-medium' : 'text-gray-700'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -108,12 +116,21 @@ export default function Header() {
                 <>
                   <Link 
                     href="/events/my-events" 
-                    className={`py-2 ${
+                    className={`py-3 px-2 rounded-lg hover:bg-gray-50 ${
                       pathname === '/events/my-events' ? 'text-primary font-medium' : 'text-gray-700'
                     }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Events
+                  </Link>
+                  <Link 
+                    href="/api-test" 
+                    className={`py-3 px-2 rounded-lg hover:bg-gray-50 ${
+                      pathname === '/api-test' ? 'text-primary font-medium' : 'text-gray-700'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    API Test
                   </Link>
                   <div className="py-2 text-sm text-gray-600 flex items-center">
                     <User className="h-4 w-4 mr-1" />

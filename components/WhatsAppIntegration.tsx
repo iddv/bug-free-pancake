@@ -45,10 +45,10 @@ export function WhatsAppIntegration() {
             alt="WhatsApp QR Code" 
             width={200} 
             height={200} 
-            className="w-48 h-48"
+            className="w-36 h-36 sm:w-48 sm:h-48"
           />
         </div>
-        <ol className="text-sm text-gray-600 list-decimal pl-5 space-y-2">
+        <ol className="text-xs sm:text-sm text-gray-600 list-decimal pl-5 space-y-2">
           <li>Open WhatsApp on your phone</li>
           <li>Tap Menu or Settings and select Linked Devices</li>
           <li>Tap on "Link a Device"</li>

@@ -72,13 +72,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        // This would be a real API call in production
-        // For now, we'll simulate authentication with a stored token
+        // Call the API to validate the token and get user info
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+        const response = await fetch(`${baseUrl}/users/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          // If the token is invalid, remove it
+          throw new Error('Invalid token');
+        }
+        
+        const userData = await response.json();
         
         setUser({
-          userId: '1',
-          name: 'Test User',
-          email: 'test@example.com'
+          userId: userData.id || userData.userId,
+          name: userData.name,
+          email: userData.email
         });
         setIsAuthenticated(true);
       } catch (error) {
@@ -96,28 +108,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
-    
-    // For demo purposes, accept any credentials
     try {
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Make login request to the API
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      const response = await fetch(`${baseUrl}/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
       
-      // Simulate login response
-      const mockUser = {
-        userId: '1',
-        name: 'Test User',
-        email
-      };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Login failed');
+      }
       
-      setUser(mockUser);
-      setIsAuthenticated(true);
-      storeToken('mock-jwt-token');
+      const data = await response.json();
       
-      // Redirect to events page
-      router.push('/events');
+      // Store the JWT token
+      if (data.token) {
+        storeToken(data.token);
+        
+        // Set user data from the response
+        setUser({
+          userId: data.user.id || data.user.userId,
+          name: data.user.name,
+          email: data.user.email,
+        });
+        
+        setIsAuthenticated(true);
+        router.push('/');
+      } else {
+        throw new Error('No token received from the server');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
       console.error('Login error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during login');
     } finally {
       setLoading(false);
     }
@@ -127,27 +154,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (name: string, email: string, password: string) => {
     setLoading(true);
     setError(null);
-    
     try {
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Make registration request to the API
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      const response = await fetch(`${baseUrl}/users/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
       
-      // Simulate registration response
-      const mockUser = {
-        userId: '1',
-        name,
-        email
-      };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Registration failed');
+      }
       
-      setUser(mockUser);
-      setIsAuthenticated(true);
-      storeToken('mock-jwt-token');
-      
-      // Redirect to events page
-      router.push('/events');
+      // After successful registration, log the user in automatically
+      await login(email, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
       console.error('Registration error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during registration');
     } finally {
       setLoading(false);
     }

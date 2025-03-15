@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { eventsApi, usersApi, whatsappApi } from './client';
+import { eventsApi, usersApi, whatsappApi, statsApi } from './client';
 import { Event, UserProfile } from './types';
 
 /**
@@ -268,4 +268,45 @@ export function useMyEvents() {
   }, [fetchMyEvents]);
 
   return { events, loading, error, refetch: fetchMyEvents };
+}
+
+/**
+ * Hook for fetching platform statistics
+ */
+export function usePlatformStats() {
+  const [stats, setStats] = useState<{
+    activePlayers: number;
+    gamesWeekly: number;
+    padelVenues: number;
+    playerRating: number;
+  } | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      const statsData = await statsApi.getPlatformStats();
+      setStats(statsData);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch platform statistics'));
+      console.error('Error fetching platform statistics:', err);
+      // Fallback to default values if API is unavailable
+      setStats({
+        activePlayers: 1200,
+        gamesWeekly: 350,
+        padelVenues: 15,
+        playerRating: 4.8,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  return { stats, loading, error, refetch: fetchStats };
 } 

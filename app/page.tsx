@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CheckCircle, MessageCircle, Users, Calendar, ChevronRight, Star, MapPin, Menu, X, User, LogOut } from "lucide-react"
+import { CheckCircle, MessageCircle, Users, Calendar, ChevronRight, Star, MapPin, Menu, X, User, LogOut, ChevronLeft } from "lucide-react"
 import { useState, useEffect } from "react"
 import { WhatsAppIntegration } from "@/components/WhatsAppIntegration"
 import { useAuth } from "@/components/AuthProvider"
+import { usePlatformStats } from "@/lib/api/hooks"
 
 // ClientOnly component to handle hydration mismatches
 function ClientOnly({ children }: { children: React.ReactNode }) {
@@ -25,7 +26,74 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const { user, isAuthenticated, logout } = useAuth();
+  const { stats, loading: statsLoading } = usePlatformStats();
+
+  // Define carousel images
+  const carouselImages = [
+    {
+      src: "/carousel/padel-action.jpg",
+      alt: "Padel court with players in action",
+      caption: "Experience Padel Like Never Before",
+      subcaption: "Join Amsterdam's most vibrant sports community"
+    },
+    {
+      src: "/carousel/social-meetup.jpg",
+      alt: "Social sports meetup with diverse group of players",
+      caption: "Connect With Players",
+      subcaption: "Find your perfect match for skill and energy"
+    },
+    {
+      src: "/carousel/team-celebration.jpg",
+      alt: "Players celebrating after a match",
+      caption: "Create Lasting Connections",
+      subcaption: "Sports bring people together in Amsterdam"
+    },
+    {
+      src: "/carousel/amsterdam-venue.jpg",
+      alt: "Amsterdam padel venue at sunset",
+      caption: "Discover Top Venues",
+      subcaption: "Play at Amsterdam's premier padel courts"
+    },
+  ]
+
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe) {
+      // Next slide
+      setCurrentImageIndex(prevIndex => 
+        prevIndex === carouselImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+    
+    if (isRightSwipe) {
+      // Previous slide
+      setCurrentImageIndex(prevIndex => 
+        prevIndex === 0 ? carouselImages.length - 1 : prevIndex - 1
+      );
+    }
+    
+    // Reset values
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,6 +109,17 @@ export default function Home() {
       window.removeEventListener("scroll", handleScroll)
     }
   }, [])
+
+  // Carousel auto-rotation effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => 
+        prevIndex === carouselImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 5000); // Change image every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [carouselImages.length]);
 
   const handleLogout = () => {
     logout();
@@ -150,32 +229,32 @@ export default function Home() {
 
             {/* Mobile Navigation */}
             {isMenuOpen && (
-              <nav className="md:hidden pt-4 pb-2">
-                <div className="flex flex-col space-y-3">
+              <nav className="md:hidden pt-4 pb-4 bg-white/95 rounded-lg shadow-lg mt-2">
+                <div className="flex flex-col space-y-4">
                   <a
                     href="#how-it-works"
-                    className={`transition-colors ${isScrolled ? "text-gray-700 hover:text-primary" : "text-white/90 hover:text-white"}`}
+                    className="px-4 py-2 hover:bg-primary/5 rounded-lg transition-colors text-gray-700 hover:text-primary"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     How It Works
                   </a>
                   <a
                     href="#courts"
-                    className={`transition-colors ${isScrolled ? "text-gray-700 hover:text-primary" : "text-white/90 hover:text-white"}`}
+                    className="px-4 py-2 hover:bg-primary/5 rounded-lg transition-colors text-gray-700 hover:text-primary"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Courts
                   </a>
                   <a
                     href="#benefits"
-                    className={`transition-colors ${isScrolled ? "text-gray-700 hover:text-primary" : "text-white/90 hover:text-white"}`}
+                    className="px-4 py-2 hover:bg-primary/5 rounded-lg transition-colors text-gray-700 hover:text-primary"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Benefits
                   </a>
                   <a
                     href="#testimonials"
-                    className={`transition-colors ${isScrolled ? "text-gray-700 hover:text-primary" : "text-white/90 hover:text-white"}`}
+                    className="px-4 py-2 hover:bg-primary/5 rounded-lg transition-colors text-gray-700 hover:text-primary"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Testimonials
@@ -226,24 +305,81 @@ export default function Home() {
         </header>
 
         {/* Hero Section - Add padding-top to account for the fixed header */}
-        <section className="relative h-[90vh] flex items-center overflow-hidden pt-16">
+        <section 
+          className="relative h-[90vh] flex items-center overflow-hidden pt-16"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div className="absolute inset-0 z-0">
-            <Image
-              src="/placeholder.svg?height=1080&width=1920"
-              alt="Padel court in Amsterdam"
-              fill
-              className="object-cover brightness-[0.6]"
-              priority
-            />
+            {carouselImages.map((image, index) => (
+              <div 
+                key={index}
+                className={`absolute inset-0 transition-all duration-1500 ease-in-out ${
+                  index === currentImageIndex 
+                    ? "opacity-100 scale-100" 
+                    : "opacity-0 scale-105"
+                }`}
+              >
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  className="object-cover brightness-[0.6]"
+                  priority={index === 0}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Navigation Buttons */}
+          <button 
+            onClick={() => setCurrentImageIndex(prev => prev === 0 ? carouselImages.length - 1 : prev - 1)}
+            className="absolute left-4 z-20 p-2 rounded-full bg-black/20 hover:bg-black/30 text-white transition-colors hidden sm:flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-8 w-8" />
+          </button>
+          <button 
+            onClick={() => setCurrentImageIndex(prev => prev === carouselImages.length - 1 ? 0 : prev + 1)}
+            className="absolute right-4 z-20 p-2 rounded-full bg-black/20 hover:bg-black/30 text-white transition-colors hidden sm:flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-8 w-8" />
+          </button>
+
+          <div className="absolute bottom-8 right-8 z-20 flex space-x-3 p-2 bg-black/20 rounded-full">
+            {carouselImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentImageIndex 
+                    ? "bg-primary scale-110 shadow-lg" 
+                    : "bg-white/50 hover:bg-white/80"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
           </div>
           <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl">
-              <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-                Padel in Amsterdam, <span className="text-primary">Simplified</span>
-              </h1>
-              <p className="text-xl md:text-2xl text-white/90 mb-8">
-                Organize games, find players, and discover courts - all through WhatsApp. No apps, no hassle.
-              </p>
+              {carouselImages.map((image, index) => (
+                <div 
+                  key={index} 
+                  className={`transition-opacity duration-1000 absolute ${
+                    index === currentImageIndex ? "opacity-100" : "opacity-0 pointer-events-none"
+                  }`}
+                >
+                  <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
+                    {image.caption} <span className="text-primary">Simplified</span>
+                  </h1>
+                  <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-6 sm:mb-8">
+                    {image.subcaption}
+                  </p>
+                </div>
+              ))}
+              <div style={{ height: "180px" }} className="mb-6 sm:mb-8"></div>
               <div className="flex flex-col sm:flex-row gap-4">
                 {isAuthenticated ? (
                   <>
@@ -285,21 +421,29 @@ export default function Home() {
         {/* Stats Section */}
         <section className="py-12 bg-primary/5">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
               <div className="text-center">
-                <p className="text-4xl md:text-5xl font-bold text-primary mb-2">1,200+</p>
+                <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2">
+                  {statsLoading ? '...' : `${stats?.activePlayers.toLocaleString()}+`}
+                </p>
                 <p className="text-gray-600">Active Players</p>
               </div>
               <div className="text-center">
-                <p className="text-4xl md:text-5xl font-bold text-primary mb-2">350+</p>
+                <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2">
+                  {statsLoading ? '...' : `${stats?.gamesWeekly.toLocaleString()}+`}
+                </p>
                 <p className="text-gray-600">Games Weekly</p>
               </div>
               <div className="text-center">
-                <p className="text-4xl md:text-5xl font-bold text-primary mb-2">15+</p>
+                <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2">
+                  {statsLoading ? '...' : `${stats?.padelVenues.toLocaleString()}+`}
+                </p>
                 <p className="text-gray-600">Padel Venues</p>
               </div>
               <div className="text-center">
-                <p className="text-4xl md:text-5xl font-bold text-primary mb-2">4.8/5</p>
+                <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2">
+                  {statsLoading ? '...' : stats?.playerRating.toFixed(1)}
+                </p>
                 <p className="text-gray-600">Player Rating</p>
               </div>
             </div>
@@ -309,15 +453,15 @@ export default function Home() {
         {/* How It Works */}
         <section id="how-it-works" className="py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="text-center mb-12 sm:mb-16">
               <Badge className="mb-4">Simple Process</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
                 Organizing Padel games in Amsterdam has never been easier. Just a few messages and you're ready to play.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
               <Card className="border-none shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -381,24 +525,24 @@ export default function Home() {
         {/* Amsterdam Padel Showcase */}
         <section id="courts" className="py-20 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 sm:mb-16">
               <Badge className="mb-4">Top Locations</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Amsterdam's Best Padel Courts</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Amsterdam's Best Padel Courts</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
                 Discover the finest Padel venues across Amsterdam, all available through our service.
               </p>
             </div>
 
             <Tabs defaultValue="padel-city" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2 mb-8">
                 <TabsTrigger value="padel-city">Padel City</TabsTrigger>
                 <TabsTrigger value="sportpark-sloten">Sportpark Sloten</TabsTrigger>
                 <TabsTrigger value="tennis-padel-ijburg">Tennis & Padel IJburg</TabsTrigger>
               </TabsList>
 
               <TabsContent value="padel-city" className="mt-0">
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div className="relative h-80 rounded-xl overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center">
+                  <div className="relative h-64 sm:h-80 rounded-xl overflow-hidden">
                     <Image
                       src="/placeholder.svg?height=600&width=800"
                       alt="Padel City Amsterdam"
@@ -536,15 +680,15 @@ export default function Home() {
         {/* Benefits Section */}
         <section id="benefits" className="py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 sm:mb-16">
               <Badge className="mb-4">Why Choose Us</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Benefits of Our Padel Community</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Benefits of Our Padel Community</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
                 Join Amsterdam's most active Padel community and experience these advantages.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               <Card className="border-none shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <CheckCircle className="h-8 w-8 text-primary mb-4" />
