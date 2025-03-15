@@ -125,26 +125,89 @@ export function useWhatsAppQrCode() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [backendUnavailable, setBackendUnavailable] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
+  const MAX_RETRIES = 0; // Never retry automatically - just mark as unavailable
+
+  // Check if the backend is available on mount
+  useEffect(() => {
+    // If we detect we're running in a development environment without the WhatsApp service
+    // Mark it as unavailable immediately to prevent any fetching
+    const checkEnvironment = async () => {
+      try {
+        // Make a simple HEAD request to see if the API is reachable
+        const response = await fetch('/api/whatsapp/status', { method: 'HEAD' });
+        if (!response.ok) {
+          console.warn('WhatsApp API appears to be unavailable - disabling feature');
+          setBackendUnavailable(true);
+          setLoading(false);
+        }
+      } catch (err) {
+        // Network error or CORS error - mark as unavailable
+        console.warn('WhatsApp API check failed - disabling feature');
+        setBackendUnavailable(true);
+        setLoading(false);
+      }
+    };
+    
+    checkEnvironment();
+  }, []);
 
   const fetchQrCode = useCallback(async () => {
+    // Don't retry if we've determined the backend is unavailable
+    if (backendUnavailable) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       const data = await whatsappApi.getWhatsAppQrCode();
-      setQrCode(data.qrCodeUrl);
+      
+      if (!data.qrCodeUrl) {
+        console.warn('Empty QR code URL returned - WhatsApp integration may not be available');
+        setBackendUnavailable(true);
+        setQrCode(null);
+      } else {
+        setQrCode(data.qrCodeUrl);
+        // If we got a valid QR code, reset retry count
+        setRetryCount(0);
+      }
+      
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch WhatsApp QR code'));
       console.error('Error fetching QR code:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch WhatsApp QR code'));
+      
+      // Mark as unavailable for any error - we don't auto-retry
+      setBackendUnavailable(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [backendUnavailable]);
 
-  useEffect(() => {
+  const resetAndRetry = useCallback(() => {
+    setBackendUnavailable(false);
+    setError(null);
+    setRetryCount(0);
     fetchQrCode();
   }, [fetchQrCode]);
 
-  return { qrCode, loading, error, refresh: fetchQrCode };
+  useEffect(() => {
+    // Only try to fetch if we think the backend is available
+    if (!backendUnavailable) {
+      fetchQrCode();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backendUnavailable]);
+
+  return { 
+    qrCode, 
+    loading, 
+    error, 
+    backendUnavailable,
+    refresh: resetAndRetry 
+  };
 }
 
 /**
@@ -176,4 +239,33 @@ export function useUserProfile(userId: string) {
   }, [fetchProfile]);
 
   return { profile, loading, error, refetch: fetchProfile };
+}
+
+/**
+ * Hook for fetching user's events
+ */
+export function useMyEvents() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchMyEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await eventsApi.getMyEvents();
+      setEvents(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch your events'));
+      console.error('Error fetching user events:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMyEvents();
+  }, [fetchMyEvents]);
+
+  return { events, loading, error, refetch: fetchMyEvents };
 } 

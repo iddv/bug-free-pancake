@@ -6,7 +6,66 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Image from 'next/image';
 
 export function WhatsAppIntegration() {
-  const { qrCode, loading, error, refresh } = useWhatsAppQrCode();
+  const { qrCode, loading, error, backendUnavailable, refresh } = useWhatsAppQrCode();
+
+  // Different UI based on status
+  let content;
+  if (loading) {
+    content = (
+      <div className="flex flex-col items-center justify-center p-8">
+        <div className="w-40 h-40 bg-gray-200 animate-pulse rounded-lg mb-4" />
+        <p className="text-gray-500">Loading QR code...</p>
+      </div>
+    );
+  } else if (backendUnavailable) {
+    content = (
+      <div className="text-center p-6">
+        <p className="text-amber-500 mb-4">WhatsApp integration unavailable</p>
+        <p className="text-sm text-gray-500 mb-4">
+          The WhatsApp integration feature is not available at this time. This may be a configuration issue.
+        </p>
+      </div>
+    );
+  } else if (error) {
+    content = (
+      <div className="text-center p-6">
+        <p className="text-red-500 mb-4">Error loading WhatsApp QR code</p>
+        <p className="text-sm text-gray-500 mb-4">
+          There was a problem connecting to the WhatsApp service.
+        </p>
+        <Button onClick={refresh} variant="outline">Try Again</Button>
+      </div>
+    );
+  } else if (qrCode) {
+    content = (
+      <div className="flex flex-col items-center">
+        <div className="border-4 border-green-500 rounded-lg p-2 mb-4">
+          <Image 
+            src={qrCode} 
+            alt="WhatsApp QR Code" 
+            width={200} 
+            height={200} 
+            className="w-48 h-48"
+          />
+        </div>
+        <ol className="text-sm text-gray-600 list-decimal pl-5 space-y-2">
+          <li>Open WhatsApp on your phone</li>
+          <li>Tap Menu or Settings and select Linked Devices</li>
+          <li>Tap on "Link a Device"</li>
+          <li>Point your phone to this screen to scan the QR code</li>
+        </ol>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="text-center p-6">
+        <p className="text-gray-500 mb-4">
+          No QR code available. The WhatsApp service might not be configured correctly.
+        </p>
+        <Button onClick={refresh} variant="outline">Refresh</Button>
+      </div>
+    );
+  }
 
   return (
     <Card className="overflow-hidden">
@@ -22,45 +81,7 @@ export function WhatsAppIntegration() {
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center p-8">
-            <div className="w-40 h-40 bg-gray-200 animate-pulse rounded-lg mb-4" />
-            <p className="text-gray-500">Loading QR code...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center p-6">
-            <p className="text-red-500 mb-4">Error loading WhatsApp QR code</p>
-            <p className="text-sm text-gray-500 mb-4">
-              The backend may not be running or the WhatsApp integration is not configured.
-            </p>
-            <Button onClick={refresh} variant="outline">Try Again</Button>
-          </div>
-        ) : qrCode ? (
-          <div className="flex flex-col items-center">
-            <div className="border-4 border-green-500 rounded-lg p-2 mb-4">
-              <Image 
-                src={qrCode} 
-                alt="WhatsApp QR Code" 
-                width={200} 
-                height={200} 
-                className="w-48 h-48"
-              />
-            </div>
-            <ol className="text-sm text-gray-600 list-decimal pl-5 space-y-2">
-              <li>Open WhatsApp on your phone</li>
-              <li>Tap Menu or Settings and select Linked Devices</li>
-              <li>Tap on "Link a Device"</li>
-              <li>Point your phone to this screen to scan the QR code</li>
-            </ol>
-          </div>
-        ) : (
-          <div className="text-center p-6">
-            <p className="text-gray-500 mb-4">
-              No QR code available. The WhatsApp service might not be configured correctly.
-            </p>
-            <Button onClick={refresh} variant="outline">Refresh</Button>
-          </div>
-        )}
+        {content}
       </CardContent>
       <CardFooter className="bg-gray-50 px-6 py-3">
         <p className="text-xs text-gray-500">

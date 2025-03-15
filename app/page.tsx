@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CheckCircle, MessageCircle, Users, Calendar, ChevronRight, Star, MapPin, Menu, X } from "lucide-react"
+import { CheckCircle, MessageCircle, Users, Calendar, ChevronRight, Star, MapPin, Menu, X, User, LogOut } from "lucide-react"
 import { useState, useEffect } from "react"
 import { WhatsAppIntegration } from "@/components/WhatsAppIntegration"
+import { useAuth } from "@/components/AuthProvider"
 
 // ClientOnly component to handle hydration mismatches
 function ClientOnly({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,7 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,6 +41,11 @@ export default function Home() {
       window.removeEventListener("scroll", handleScroll)
     }
   }, [])
+
+  const handleLogout = () => {
+    logout();
+    setIsMenuOpen(false);
+  };
 
   return (
     <ClientOnly>
@@ -88,9 +95,47 @@ export default function Home() {
                 >
                   Testimonials
                 </a>
-                <Button size="sm" className="ml-4">
-                  Start Playing
-                </Button>
+                
+                {isAuthenticated ? (
+                  <>
+                    <Link href="/events">
+                      <Button size="sm" className="mr-2">
+                        All Events
+                      </Button>
+                    </Link>
+                    <Link href="/events/my-events">
+                      <Button size="sm" variant="outline" className="ml-1">
+                        My Events
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleLogout}
+                      className={`${isScrolled ? "text-gray-700" : "text-white/90"} hover:text-white flex items-center gap-1 ml-4`}
+                    >
+                      <LogOut className="h-3 w-3" />
+                      Logout
+                    </Button>
+                    <div className={`flex items-center text-sm ${isScrolled ? "text-gray-600" : "text-white/80"}`}>
+                      <User className="h-3 w-3 mr-1" />
+                      {user?.name || user?.email}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <Button variant="outline" size="sm" className={`${isScrolled ? "bg-white" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}>
+                        Login
+                      </Button>
+                    </Link>
+                    <Link href="/register">
+                      <Button size="sm" className="ml-4">
+                        Start Playing
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </nav>
 
               {/* Mobile Menu Button */}
@@ -135,9 +180,45 @@ export default function Home() {
                   >
                     Testimonials
                   </a>
-                  <Button size="sm" className="w-full mt-2" onClick={() => setIsMenuOpen(false)}>
-                    Start Playing
-                  </Button>
+                  
+                  {isAuthenticated ? (
+                    <>
+                      <Link href="/events" onClick={() => setIsMenuOpen(false)}>
+                        <Button size="sm" className="w-full mt-2">
+                          All Events
+                        </Button>
+                      </Link>
+                      <Link href="/events/my-events" onClick={() => setIsMenuOpen(false)}>
+                        <Button size="sm" variant="outline" className="w-full mt-2">
+                          My Events
+                        </Button>
+                      </Link>
+                      <div className={`flex items-center text-sm mt-4 ${isScrolled ? "text-gray-600" : "text-white/80"}`}>
+                        <User className="h-3 w-3 mr-1" />
+                        {user?.name || user?.email}
+                      </div>
+                      <button 
+                        onClick={handleLogout}
+                        className={`text-left mt-2 ${isScrolled ? "text-gray-700" : "text-white/90"} hover:text-white flex items-center gap-1`}
+                      >
+                        <LogOut className="h-3 w-3" />
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="outline" size="sm" className={`w-full mt-2 ${isScrolled ? "bg-white" : "bg-white/10 text-white border-white/20 hover:bg-white/20"}`}>
+                          Login
+                        </Button>
+                      </Link>
+                      <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                        <Button size="sm" className="w-full mt-2">
+                          Start Playing
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </nav>
             )}
@@ -164,13 +245,33 @@ export default function Home() {
                 Organize games, find players, and discover courts - all through WhatsApp. No apps, no hassle.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="group">
-                  Start Playing Now
-                  <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-                <Button size="lg" variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                  How It Works
-                </Button>
+                {isAuthenticated ? (
+                  <>
+                    <Link href="/events">
+                      <Button size="lg" className="group">
+                        Browse Events
+                        <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
+                    <Link href="/events/my-events">
+                      <Button size="lg" variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+                        My Events
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <Link href="/register">
+                    <Button size="lg" className="group">
+                      Start Playing Now
+                      <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                )}
+                {!isAuthenticated && (
+                  <Button size="lg" variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+                    How It Works
+                  </Button>
+                )}
               </div>
             </div>
           </div>

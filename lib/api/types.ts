@@ -35,6 +35,7 @@ export interface Event {
   status: EventStatus;
   participants: Participant[];
   whatsappGroupLink?: string;
+  participantPhoneNumbers?: string[]; // For backwards compatibility with components
 }
 
 // Event creation request

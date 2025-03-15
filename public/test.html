@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Static Test Page</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #0070f3;
+    }
+    .card {
+      border: 1px solid #eaeaea;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Static Test Page</h1>
+  
+  <div class="card">
+    <h2>Connection Test</h2>
+    <p class="success">✅ If you can see this page, your connection to the server is working!</p>
+    <p>This is a completely static HTML file served directly from the public directory, without any React/Next.js processing.</p>
+  </div>
+  
+  <div class="card">
+    <h2>Network Information</h2>
+    <p><strong>Page Loaded:</strong> <span id="load-time"></span></p>
+    <p><strong>User Agent:</strong> <span id="user-agent"></span></p>
+    <p><strong>Screen Size:</strong> <span id="screen-size"></span></p>
+  </div>
+  
+  <div class="card">
+    <h2>Next Steps</h2>
+    <p>Try the following pages to test React rendering:</p>
+    <ul>
+      <li><a href="/simplified-home">Simplified Home</a></li>
+      <li><a href="/debug">Debug Page</a></li>
+      <li><a href="/test">Test Page</a></li>
+    </ul>
+  </div>
+
+  <script>
+    // Simple JavaScript to fill in dynamic values
+    document.getElementById('load-time').textContent = new Date().toLocaleString();
+    document.getElementById('user-agent').textContent = navigator.userAgent;
+    document.getElementById('screen-size').textContent = `${window.innerWidth}×${window.innerHeight}`;
+  </script>
+</body>
+</html> 

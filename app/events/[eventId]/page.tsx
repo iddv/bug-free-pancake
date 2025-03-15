@@ -1,205 +1,319 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEvent } from '@/lib/api/hooks';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/components/AuthProvider';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, CheckCircle, MapPin, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Calendar, Users, User, AlertCircle } from 'lucide-react';
+import { CancelEventButton } from '@/components/CancelEventButton';
 
-export default function EventDetailPage({ params }: { params: { eventId: string } }) {
-  const { eventId } = params;
-  const { event, loading, error } = useEvent(eventId);
+// Base URL for the API - update this to match your backend server
+const API_BASE_URL = 'http://localhost:8000'; // Change this to match your actual backend URL
+
+interface EventParticipant {
+  userId: string;
+  name: string;
+  joinedAt: string;
+}
+
+interface EventDetail {
+  eventId: string;
+  sport: string;
+  location: string;
+  date: string;
+  currentPlayers: number;
+  maxPlayers: number;
+  skillLevel: number;
+  status: string;
+  createdBy: string;
+  whatsappGroupLink: string | null;
+  bookingUrl?: string | null;
+  createdAt: string;
+  participants: EventParticipant[];
+}
+
+// Helper function to check if an event is active
+const isEventActive = (status: string): boolean => {
+  return status === 'CONFIRMED' || 
+         status === 'Open' || 
+         status === 'OPEN' || 
+         status === 'Confirmed';
+};
+
+// Helper function to check if an event is cancelled
+const isEventCancelled = (status: string): boolean => {
+  return status === 'CANCELLED' || 
+         status === 'Cancelled';
+};
+
+// Sport icons and colors
+const sportIcons: Record<string, string> = {
+  'PADEL': '🎾',
+  'TENNIS': '🎾',
+  'FOOTBALL': '⚽',
+  'BASKETBALL': '🏀',
+  'VOLLEYBALL': '🏐',
+  'HOCKEY': '🏑',
+  'BADMINTON': '🏸',
+  'CYCLING': '🚴',
+  'RUNNING': '🏃',
+};
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  }).format(date);
+};
+
+export default function EventDetailPage({ 
+  params 
+}: { 
+  params: { eventId: string } | Promise<{ eventId: string }> 
+}) {
+  const unwrappedParams = params instanceof Promise ? React.use(params) : params;
+  const { eventId } = unwrappedParams;
+  
+  const { user, isAuthenticated } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [event, setEvent] = useState<EventDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-    }).format(date);
+  // Fetch event data
+  useEffect(() => {
+    const fetchEvent = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/events/${eventId}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch event: ${response.statusText}`);
+        }
+        
+        const eventData = await response.json();
+        setEvent(eventData);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch event'));
+        console.error('Error fetching event:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  }, [eventId]);
+
+  // Handle successful cancel event
+  const handleSuccessfulCancel = async () => {
+    // Refetch the event data to get the updated status
+    try {
+      const response = await fetch(`${API_BASE_URL}/events/${eventId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch updated event: ${response.statusText}`);
+      }
+      
+      const eventData = await response.json();
+      setEvent(eventData);
+    } catch (err) {
+      console.error('Error refetching event after cancellation:', err);
+    }
   };
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-white p-8">Loading...</div>;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-2/3 mb-6"></div>
+            <div className="h-32 bg-gray-200 rounded mb-6"></div>
+            <div className="h-64 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6">Event Details</h1>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+            <div className="flex items-center mb-2">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              <h3 className="font-medium">Error loading event</h3>
+            </div>
+            <p>{error?.message || 'Event not found'}</p>
+            <p className="text-sm mt-2">
+              The event may have been removed or you may have followed an invalid link.
+            </p>
+            <Link href="/events" className="mt-4 inline-block text-blue-600 hover:text-blue-800">
+              Return to events listing
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isCreator = user?.id === event.createdBy;
+  const hasJoined = event.participants?.some(p => p.userId === user?.id);
+  const isFull = event.currentPlayers >= event.maxPlayers;
+  const isPast = new Date(event.date) < new Date();
+  const canJoin = isAuthenticated && !hasJoined && !isFull && !isPast && isEventActive(event.status);
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-16">
-        <div className="mb-8">
-          <Link href="/events" className="inline-flex items-center text-blue-600 hover:text-blue-800">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Events
+    <div className="min-h-screen bg-white p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6 flex justify-between items-center">
+          <Link href="/events" className="text-blue-600 hover:text-blue-800">
+            ← Back to Events
           </Link>
+          {isCreator && isEventActive(event.status) && (
+            <CancelEventButton eventId={event.eventId} onSuccess={handleSuccessfulCancel} />
+          )}
         </div>
 
-        {loading ? (
-          <div className="max-w-4xl mx-auto text-center py-12">
-            <p>Loading event details...</p>
-          </div>
-        ) : error ? (
-          <div className="max-w-4xl mx-auto">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                  <p>Error loading event: {error.message}</p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4"
-                    onClick={() => router.push('/events')}
+        <Card className="mb-8 shadow-md">
+          <CardHeader>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <Badge variant="outline" className="mb-2">
+                  {sportIcons[event.sport] || '🏆'} {event.sport}
+                </Badge>
+                <CardTitle className="text-3xl">{event.location}</CardTitle>
+                <CardDescription className="flex items-center mt-2">
+                  <Calendar className="h-4 w-4 mr-1" /> 
+                  {formatDate(event.date)}
+                </CardDescription>
+              </div>
+              <Badge className={
+                isEventActive(event.status) ? 'bg-green-100 text-green-800' : 
+                isEventCancelled(event.status) ? 'bg-red-100 text-red-800' : 
+                'bg-blue-100 text-blue-800'
+              }>
+                {event.status}
+              </Badge>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center text-gray-600">
+                <MapPin className="h-4 w-4 mr-1" />
+                <span>{event.location}</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Users className="h-4 w-4 mr-1" />
+                <span>
+                  {event.currentPlayers}/{event.maxPlayers} players 
+                  {isFull && <span className="text-orange-600 ml-1">(Full)</span>}
+                </span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <span>Skill level: {Array(event.skillLevel).fill('★').join('')}</span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <h3 className="text-lg font-medium mb-3">Extra Info</h3>
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              {event.whatsappGroupLink && (
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <h4 className="font-medium mb-2">WhatsApp Group</h4>
+                  <a 
+                    href={event.whatsappGroupLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-green-600 flex items-center hover:text-green-800"
                   >
-                    Return to Events
-                  </Button>
+                    <Image src="/whatsapp-icon.svg" alt="WhatsApp" width={20} height={20} className="mr-2" />
+                    Join WhatsApp Group
+                  </a>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        ) : event ? (
-          <div className="max-w-4xl mx-auto">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <Badge variant="outline" className="mb-2">
-                    {event.sport}
-                  </Badge>
-                  <Badge className={event.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 
-                            event.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}>
-                    {event.status}
-                  </Badge>
+              )}
+              {event.bookingUrl && (
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <h4 className="font-medium mb-2">Court Booking</h4>
+                  <a 
+                    href={event.bookingUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 flex items-center hover:text-blue-800"
+                  >
+                    <Calendar className="h-4 w-4 mr-1" />
+                    View Booking Details
+                  </a>
                 </div>
-                <CardTitle className="text-2xl">{event.location}</CardTitle>
-                <div className="text-gray-600 mt-2">
+              )}
+            </div>
+            
+            <h3 className="text-lg font-medium mb-3">Participants ({event.participants.length})</h3>
+            <div className="border border-gray-200 rounded-lg divide-y">
+              {event.participants.map((participant) => (
+                <div key={participant.userId} className="p-3 flex justify-between items-center">
                   <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>{formatDate(event.date)}</span>
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Location</h3>
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                      <span>{event.location}</span>
+                    <User className="h-5 w-5 mr-2 text-gray-500" />
+                    <div>
+                      <p className="font-medium">{participant.name}</p>
+                      <p className="text-sm text-gray-500">
+                        Joined {new Date(participant.joinedAt).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Players</h3>
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-2 text-gray-400" />
-                      <span>{event.currentPlayers}/{event.maxPlayers} players</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Skill Level</h3>
-                  <div className="flex items-center">
-                    <span className="text-lg">{Array(event.skillLevel).fill('★').join('')}{Array(5 - event.skillLevel).fill('☆').join('')}</span>
-                    <span className="ml-2 text-sm text-gray-500">({event.skillLevel} out of 5)</span>
-                  </div>
-                </div>
-                
-                {event.bookingUrl && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">External Booking</h3>
-                    <a 
-                      href={event.bookingUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      {event.bookingUrl}
-                    </a>
-                  </div>
-                )}
-                
-                {event.whatsappGroupLink && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">WhatsApp Group</h3>
-                    <a 
-                      href={event.whatsappGroupLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-green-600"
-                    >
-                      <Image src="/whatsapp-icon.svg" alt="WhatsApp" width={20} height={20} className="mr-2" />
-                      Join WhatsApp Group
-                    </a>
-                  </div>
-                )}
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Participants</h3>
-                  {event.participants && event.participants.length > 0 ? (
-                    <ul className="divide-y divide-gray-100 border border-gray-100 rounded-md overflow-hidden">
-                      {event.participants.map((participant, index) => (
-                        <li key={index} className="flex items-center justify-between px-4 py-3">
-                          <div>
-                            <p className="font-medium">{participant.name}</p>
-                            {participant.status === 'CONFIRMED' && (
-                              <p className="text-xs text-gray-500">Joined: {new Date(participant.joinedAt).toLocaleDateString()}</p>
-                            )}
-                          </div>
-                          <Badge className={
-                            participant.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 
-                            participant.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-                          }>
-                            {participant.status}
-                          </Badge>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500">No participants yet</p>
+                  {participant.userId === event.createdBy && (
+                    <Badge variant="outline">Creator</Badge>
                   )}
                 </div>
-                
-                {event.status === 'CANCELLED' && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                    <p className="font-medium">This event has been cancelled.</p>
-                  </div>
-                )}
-                
-                {event.currentPlayers >= event.maxPlayers && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
-                    <p className="font-medium">This event is fully booked.</p>
-                  </div>
-                )}
-              </CardContent>
-              
-              <CardFooter className="flex justify-between border-t border-gray-100 pt-6">
-                <Button variant="outline" onClick={() => router.push('/events')}>
-                  Back to Events
-                </Button>
-                
-                {event.status === 'CONFIRMED' && event.currentPlayers < event.maxPlayers && (
-                  <Button onClick={() => router.push(`/events/${event.eventId}/join`)}>
-                    <CheckCircle className="mr-2 h-4 w-4" /> Join Event
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-          </div>
-        ) : (
-          <div className="max-w-4xl mx-auto text-center py-12">
-            <p>Event not found</p>
-            <Button 
-              variant="outline" 
-              className="mt-4"
-              onClick={() => router.push('/events')}
-            >
-              Return to Events
-            </Button>
-          </div>
-        )}
+              ))}
+              {event.participants.length === 0 && (
+                <div className="p-3 text-gray-500 text-center">
+                  No one has joined this event yet
+                </div>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <div>
+              {!isAuthenticated && (
+                <p className="text-sm text-gray-500 mb-2">Login to join this event</p>
+              )}
+              {isAuthenticated && hasJoined && (
+                <Badge variant="outline" className="mr-2">You've joined this event</Badge>
+              )}
+              {isPast && (
+                <Badge variant="outline" className="bg-gray-100">This event has passed</Badge>
+              )}
+            </div>
+            <div className="flex gap-3">
+              {canJoin && (
+                <Link href={`/events/${event.eventId}/join`}>
+                  <Button>Join Event</Button>
+                </Link>
+              )}
+              {!canJoin && !isAuthenticated && (
+                <Link href="/login">
+                  <Button variant="outline">Log In</Button>
+                </Link>
+              )}
+            </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

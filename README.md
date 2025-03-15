@@ -13,6 +13,12 @@ A modern landing page for a social sports application that connects players, org
 - Natural language event creation using NLP
 - Backend API integration for event management
 - User participation tracking
+- Event filtering by sport type and date
+- User-specific event views
+- Event cancellation with confirmation
+- User authentication (login/register)
+- WhatsApp integration for event notifications
+- Advanced UI components including calendar and time picker
 
 ## Frontend Components
 
@@ -24,9 +30,19 @@ The application includes the following key components:
 - **Tabbed Interface**: Switch between natural language and structured input methods
 
 ### Event Management
-- **Event Listings**: View all upcoming sports events
+- **Event Listings**: View all upcoming sports events with filtering options
+- **My Events**: View events you've created or joined
 - **Event Details**: See comprehensive information about specific events
 - **Join Event**: Easily join events with available slots
+- **Cancel Event**: Cancel events you've created with confirmation dialog
+
+### User Experience
+- **Toast Notifications**: Receive feedback on actions like event cancellation
+- **Confirmation Dialogs**: Prevent accidental actions with confirmation prompts
+- **Filtering**: Filter events by sport type and date range
+- **Responsive Design**: Optimized for all device sizes
+- **Authentication**: User registration and login functionality
+- **WhatsApp Integration**: Connect your WhatsApp account for event notifications
 
 ## Backend API Integration
 
@@ -34,12 +50,22 @@ The frontend integrates with a RESTful backend API that provides the following e
 
 ### Event Management Endpoints
 - `GET /api/events` - List all upcoming events
+- `GET /api/events/my-events` - List events for the current user
 - `GET /api/events/{eventId}` - Get event by ID
 - `POST /api/events` - Create new event
 - `POST /api/events/parse` - Parse natural language event descriptions
 - `POST /api/events/{eventId}/join` - Join an event
-- `POST /api/events/{eventId}/cancel` - Cancel an event
+- `PUT /api/events/{eventId}/cancel` - Cancel an event
 - `GET /api/events/sport-types` - Get available sport types
+
+### Authentication Endpoints
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login a user
+- `GET /api/auth/me` - Get current user information
+
+### WhatsApp Integration Endpoints
+- `GET /api/whatsapp/status` - Get WhatsApp connection status
+- `GET /api/whatsapp/qrcode` - Get QR code for WhatsApp connection
 
 ## Getting Started
 
@@ -77,21 +103,42 @@ Key environment variables:
 
 ```
 /app                     # Next.js app directory
+  /components            # App-specific components
+  /debug                 # Debug pages and utilities
   /events                # Event-related pages
     /[eventId]           # Event details page
       /join              # Join event page
     /create              # Create event page
+    /my-events           # User-specific events page
+  /login                 # Login page
+  /register              # Registration page
+  /simplified-home       # Alternative home page
   /page.tsx              # Landing page
 /components              # React components
   /ui                    # Reusable UI components
-  /EventCreationForm.tsx # Structured event creation
-  /JoinEventForm.tsx     # Join event form
-  /NaturalLanguageEventForm.tsx # Natural language input
+    /button.tsx          # Button component
+    /dialog.tsx          # Dialog component
+    /toast.tsx           # Toast notification component
+    /calendar.tsx        # Calendar component
+    /time-picker.tsx     # Time picker component
+    /form.tsx            # Form components
+    /switch.tsx          # Switch component
+  /AuthProvider.tsx      # Authentication provider
+  /ClientAuthProvider.tsx # Client-side auth provider
+  /CancelEventButton.tsx # Event cancellation button with confirmation
+  /ErrorBoundary.tsx     # Error handling components
+  /Header.tsx            # Application header
+  /WhatsAppIntegration.tsx # WhatsApp integration component
 /lib                     # Utility functions and hooks
   /api                   # API integration
     /client.ts           # API client
+    /events.ts           # Event-specific API functions
     /hooks.ts            # React hooks for API
     /types.ts            # TypeScript types
+    /auth.ts             # Authentication utilities
+/public                  # Static files
+  /mock-api              # Mock API data for development
+/scripts                 # Utility scripts
 ```
 
 ## Learn More

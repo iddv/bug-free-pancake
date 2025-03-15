@@ -1,6 +1,11 @@
+import React from 'react';
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
+import ClientAuthProvider from "@/components/ClientAuthProvider";
+import ErrorBoundaryWrapper from '@/components/ErrorBoundaryWrapper';
+import Header from '@/components/Header';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,11 +23,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Social Sports Landing Page",
-  description: "Connect, Play, and Organize Sports Events with Friends",
-  keywords: ["sports", "social", "events", "community", "teams", "games"],
-  authors: [{ name: "Social Sports Team" }],
-  robots: "index, follow",
+  title: "Social Sports - Connect & Play",
+  description: "Join sports events, find players, and organize games in your city",
 };
 
 export default function RootLayout({
@@ -35,7 +37,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ClientAuthProvider>
+          <ErrorBoundaryWrapper>
+            <Header />
+            {children}
+          </ErrorBoundaryWrapper>
+          <Toaster />
+        </ClientAuthProvider>
       </body>
     </html>
   );
